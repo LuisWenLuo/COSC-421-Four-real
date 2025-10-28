@@ -9,6 +9,10 @@ COSC 421 - Network Science group project
 - Liam Storgaard (6458279)
 - Luis Wen (10665891)
 
+## Topic
+
+- Analyzing airport connectivity and delay propagation in Canada's top airports 
+
 ## Data 
 
 - The data that was collected was from September 15, 2025 - September 30, 2025
