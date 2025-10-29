@@ -1,0 +1,11 @@
+metric,rho,p_value,n,outcome
+degree_in,NA,NA,5,"rho(prev,next)"
+degree_out,NA,NA,5,"rho(prev,next)"
+degree_total,NA,NA,5,"rho(prev,next)"
+strength_in,-0.3999999999999999,0.504631575468691,5,"rho(prev,next)"
+strength_out,-0.29999999999999993,0.623837664781073,5,"rho(prev,next)"
+strength_total,-0.29999999999999993,0.623837664781073,5,"rho(prev,next)"
+betweenness,-0.11180339887498948,0.8579446176050991,5,"rho(prev,next)"
+closeness,-0.29999999999999993,0.623837664781073,5,"rho(prev,next)"
+pagerank,-0.3999999999999999,0.504631575468691,5,"rho(prev,next)"
+eigen_undirected,-0.3999999999999999,0.504631575468691,5,"rho(prev,next)"

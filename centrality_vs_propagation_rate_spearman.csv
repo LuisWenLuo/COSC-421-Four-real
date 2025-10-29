@@ -1,0 +1,11 @@
+metric,rho,p_value,n
+degree_in,NA,NA,5
+degree_out,NA,NA,5
+degree_total,NA,NA,5
+strength_in,0,1,5
+strength_out,-0.19999999999999996,0.7470600781046621,5
+strength_total,-0.19999999999999996,0.7470600781046621,5
+betweenness,-0.33541019662496846,0.5810906728217108,5
+closeness,-0.19999999999999996,0.7470600781046621,5
+pagerank,0,1,5
+eigen_undirected,0,1,5
