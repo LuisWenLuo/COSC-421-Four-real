@@ -1,4 +1,4 @@
-# COSC-421-Four-real
+# Team Four real
 
 COSC 421 - Network Science group project
 
@@ -11,9 +11,9 @@ COSC 421 - Network Science group project
 
 ## Topic
 
-- Analyzing airport connectivity and delay propagation in Canada's top airports 
+- Analyzing airport connectivity and delay propagation in Canada's top airports (Vancouver, Edmonton, Toronto, Calgary, and Montreal)
 
 ## Data 
 
-- The data that was collected was from September 15, 2025 - September 30, 2025
+- The data that was collected was from September 1, 2025 - September 15, 2025
 - Our top airports are Vancouver, Calgary, Edmonton, Toronto, and Montreal
