@@ -1,55 +1,63 @@
-\documentclass[12pt]{article}
-
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{hyperref}
-\usepackage{enumitem}
 
 \title{COSC 421 Network Science Project Progress Report}
 \date{\today}
 
 \begin{document}
-
 \maketitle
 
 \section*{Project Progress Overview}
 
 \subsection*{1. How Far We Have Come}
-So far, we have successfully:
+So far, we have:
 \begin{itemize}[leftmargin=*]
     \item Collected and cleaned the \texttt{nodes.csv} and \texttt{flights.csv} datasets, representing Canadian airports and flight connections.
-    \item Built a directed, weighted network using \texttt{igraph} in R with airports as nodes and flights as edges.
-    \item Computed key centrality metrics including in-degree, out-degree, betweenness, and eigenvector centrality.
-    \item Conducted initial network analysis, identifying the most central hubs (Toronto, Calgary, Vancouver) and highlighting Vancouver as a critical source of delay propagation.
-    \item Simulated network robustness by iteratively removing highly central airports and measuring the impact on network efficiency and connectivity.
+    \item Built a directed and weighted network using \texttt{igraph} in R with airports as nodes and flights as edges.
+    \item Computed centrality metrics including in-degree, out-degree, betweenness, and eigenvector centrality.
+    \item Conducted an initial network analysis, identifying the most central hubs (Toronto, Calgary, Vancouver) and finding Vancouver as a source of delay propagation and other insights.
+    \item Simulated network strength by iteratively removing highly central airports and measuring the impact on network efficiency and connectivity.
     \item Visualized the network before and after hub removals and plotted the changes in average path length and largest strongly connected component size.
 \end{itemize}
 
 \subsection*{2. Challenges Faced}
-During this phase, we encountered several challenges:
+
+\paragraph*{Luis}
 \begin{itemize}[leftmargin=*]
-    \item \textbf{Small network size}: With only 5 airports, some centrality metrics, such as betweenness, were initially zero for several nodes due to the fully connected structure.
-    \item \textbf{Handling NA values}: When removing multiple nodes, some efficiency calculations returned NA because the remaining network was too small, requiring careful handling in plots.
-    \item \textbf{Delay propagation interpretation}: While Toronto is the most central hub structurally, Vancouver proved to be the worst for spreading delays, highlighting the difference between structural centrality and operational risk.
-    \item \textbf{Data integration}: Ensuring that the flights and nodes datasets merged correctly for the network construction took careful attention to matching IATA and ICAO codes.
+    \item \textbf{Small network size}: With only 5 airports, some centrality metrics, such as betweeness, were initially zero for several nodes due to the fully connected structure.
+    \item \textbf{Handling NA values}: When multiple nodes were removed, some efficiency calculations returned NA because the remaining network was too small, requiring careful handling of the plots.
+    \item \textbf{Delay propagation interpretation}: Although Toronto is the most central hub structurally, Vancouver was found to be the worst for spreading delays, highlighting the difference between structural centrality and operational risk.
+    \item \textbf{Data integration}: Ensuring that the flights and nodes data sets merged correctly for network construction took careful attention to matching IATA and ICAO codes.
+\end{itemize}
+
+\paragraph*{Liam}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Complex results:} Although R provides a very comprehensive analysis of the raw data, it is more difficult to interpret it in the context of the research question. However, for this portion of the analysis, no issues with NaN values or zeros for betweenness were encountered.
+    \item \textbf{Large dataset:} The flight list and resulting network are extremely complex with over 4000 flights. This makes some graphs hard to look at.
+    \item \textbf{Advanced metrics:} Deciding which metrics to use on the data was somewhat confusing since some of R's features go beyond what we have looked at in class.
 \end{itemize}
 
 \subsection*{3. Work Completed}
 \begin{itemize}[leftmargin=*]
     \item Network construction in R using \texttt{igraph}.
     \item Centrality analysis for all nodes.
-    \item Robustness simulation for targeted removal of high-centrality airports.
-    \item Visualization of network structure and robustness trends.
-    \item Interpretation of results, including connectivity, efficiency, and delay propagation.
+    \item Visualization of the network structure using R.
+    \item Correlation statistics (such as Spearman rank) and more advanced centrality measures (eigenvector).
 \end{itemize}
 
 \subsection*{4. Remaining Tasks}
 \begin{itemize}[leftmargin=*]
-    \item Extend robustness analysis to include \textbf{random removals} for comparison with targeted attacks.
-    \item Incorporate additional metrics such as clustering coefficient, modularity, and seasonal delay patterns if data becomes available.
-    \item Create final visualizations for presentation and report (network plots, robustness plots, delay propagation heatmaps).
-    \item Write a concise summary of findings and conclusions for the final report.
-    \item Prepare the video presentation summarizing methodology, results, and interpretations.
+    \item Create final visualizations for presentation and report (network plots, plots, delay propagation heatmaps).
+    \item Write a concise summary of the findings and conclusions for the final report.
+    \item Interpret findings based on data and analysis in the context of each of our research questions.
+    \item Prepare the video presentation summarizing the methodology, results, and interpretations.
 \end{itemize}
 
 \section*{Conclusion}
