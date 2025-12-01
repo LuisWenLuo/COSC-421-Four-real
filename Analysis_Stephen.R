@@ -94,10 +94,32 @@ print(top_bridges)
 
 # 7. Visualize degree distribution ------------------------------------------
 
+# 7. Visualize degree distribution (DISCRETE & CLEAR) ------------------------
+
+# 7. Visualize degree distribution (DISCRETE & CLEAR) ------------------------
+
+deg_vals <- degree(g_all)
+
+deg_df <- as.data.frame(table(deg_vals))
+colnames(deg_df) <- c("Degree", "Count")
+deg_df$Degree <- as.numeric(as.character(deg_df$Degree))
+
+ggplot(deg_df, aes(x = Degree, y = Count)) +
+  geom_col(fill = "steelblue", color = "white") +
+  labs(
+    title = "Degree Distribution of Canadian Airport Network",
+    x = "Number of Connections (Degree)",
+    y = "Number of Airports"
+  ) +
+  theme_minimal(base_size = 13)
+
+# Optional: weighted degree (strength) distribution
+strength_vals <- strength(g_all, weights = E(g_all)$flights_total)
+
 hist(
-  degree(g_all),
-  main = "Degree Distribution of Canadian Airport Network",
-  xlab = "Number of Connections (Degree)",
+  strength_vals,
+  main = "Weighted Degree (Traffic Volume) Distribution",
+  xlab = "Total Number of Flights",
   col = "steelblue",
   border = "white"
 )
@@ -118,6 +140,7 @@ plot(
   edge.width = E(g_giant)$flights_total / max(E(g_giant)$flights_total, na.rm = TRUE) * 3,
   main = "Giant Component of Canadian Airport Network"
 )
+
 
 # 9. Export centrality results ----------------------------------------------
 
