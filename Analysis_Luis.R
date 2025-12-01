@@ -7,8 +7,8 @@ library(tidyverse)
 
 
 # 1. Load data (replace paths as needed)
-nodes <- read.csv("/User/luiswen/Downloads/nodes.csv", stringsAsFactors = FALSE)  # alternatively use nodes <- read_csv("nodes.csv", show_col_types = FALSE)
-flights <- read.csv("/User/luiswen/Downloads/flights.csv", stringsAsFactors = FALSE) # alternatively use flights <- read_csv("flights.csv", show_col_types = FALSE)
+nodes <- read.csv("/Users/luiswen/Downloads/nodes.csv", stringsAsFactors = FALSE)  # alternatively use nodes <- read_csv("nodes.csv", show_col_types = FALSE)
+flights <- read.csv("/Users/luiswen/Downloads/flights.csv", stringsAsFactors = FALSE) # alternatively use flights <- read_csv("flights.csv", show_col_types = FALSE)
 
 
 # 2. Build the airport network by grouping flights into weighted directed edges
