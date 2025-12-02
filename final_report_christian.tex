@@ -1,0 +1,173 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{hyperref}
+
+\title{COSC 421 Final Report}
+\author{Christian Eziekwu}
+\date{November 30, 2025}
+
+\begin{document}
+\maketitle
+
+\section*{1. Introduction to Metrics}
+
+In order to determine which Canadian airports serve as the most central hubs in the network and how their structural importance correlates with operational flight volume, several centrality metrics and operational load metrics were compared.
+\\
+\\
+For analyzing structural centrality:
+\begin{enumerate}[label=\arabic*.]
+    \item Degree (in, out, and total)
+    \item Strength (weighted degree based on flight volume)
+    \item Betweenness Centrality
+    \item Closeness Centrality
+    \item Eigenvector Centrality
+\\
+\end{enumerate}
+
+
+For analyzing operational flight volume:
+\begin{enumerate}[label=\arabic*.]
+    \item total\_flights (sum of incoming and outgoing flights)
+    \item outgoing\_flights (number of departures)
+    \item incoming\_flights (number of arrivals)
+    \item n\_destinations (number of unique destination airports)
+    \item n\_origins (number of unique origin airports)
+    \item avg\_flights\_per\_dest (average flight frequency per route)
+\end{enumerate}
+
+\section*{2. Hub Centrality and Flight Volume}
+
+\subsection*{2.1 Hub Hierarchy}
+
+By examining degree centrality, strength, betweenness, and closeness centrality, a clear hierarchy of Canada's major airports emerges. Calgary, Vancouver, and Toronto form the top tier with the highest degree centrality, while Montreal and Edmonton occupy lower positions in the network structure.
+
+\begin{table}[h!]
+    \centering
+    \caption{Centrality metrics for major Canadian airports}
+    \begin{tabular}{lccccc}
+        \toprule
+        Airport & Degree & In-Degree & Out-Degree & Betweenness & Total Flights \\
+        \midrule
+        YYC (Calgary)   & 117 & 58 & 59 & 0  & 2039 \\
+        YVR (Vancouver) & 114 & 55 & 59 & 0  & 2023 \\
+        YYZ (Toronto)   & 114 & 55 & 59 & 0  & 2342 \\
+        YUL (Montreal)  & 107 & 51 & 56 & 3  & 1127 \\
+        YEG (Edmonton)  & 92  & 53 & 39 & 10 & 789  \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Calgary leads in degree centrality with 117 connections, closely followed by Vancouver and Toronto at 114 each. These three airports demonstrate remarkably balanced connectivity with nearly equal in-degree and out-degree values, indicating symmetric hub operations. Montreal shows slightly lower connectivity at 107, while Edmonton, despite having 92 connections, exhibits an asymmetric pattern with higher in-degree (53) than out-degree (39), suggesting its role as more of a destination hub than an origin hub.
+
+Interestingly, betweenness centrality is low across all top airports (0 for the top three), with only Edmonton showing modest betweenness (10). This indicates that the network structure is highly interconnected, with most airports having direct connections rather than requiring intermediary hubs.
+
+\subsection*{2.2 Flight Volume Distribution}
+
+\begin{table}[h!]
+    \centering
+    \caption{Operational flight volume by airport}
+    \begin{tabular}{lcccc}
+        \toprule
+        Airport & Total Flights & Degree & Flights per Connection & Hub Type \\
+        \midrule
+        YYZ (Toronto)   & 2342 & 114 & 20.5 & Major Hub \\
+        YYC (Calgary)   & 2039 & 117 & 17.4 & Major Hub \\
+        YVR (Vancouver) & 2023 & 114 & 17.7 & Connector Hub \\
+        YUL (Montreal)  & 1127 & 107 & 10.5 & Regional Airport \\
+        YEG (Edmonton)  & 789  & 92  & 8.6  & Regional Airport \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Toronto handles the highest flight volume (2,342 flights) despite not having the highest degree centrality, indicating higher flight frequency per route. Calgary and Vancouver follow closely with 2,039 and 2,023 flights respectively. The correlation between degree centrality and flight volume is evident, though not perfect---Toronto demonstrates that operational volume can exceed what degree centrality alone would predict.
+
+Montreal and Edmonton, classified as regional airports based on their combined metrics, handle significantly fewer flights (1,127 and 789 respectively). The flights-per-connection ratio reveals operational intensity: Toronto averages 20.5 flights per connection, while Edmonton averages only 8.6, highlighting the distinction between major hubs with high-frequency routes and regional airports with lower-frequency connections.
+
+\section*{3. Centrality and Volume Relationships}
+
+The analysis of Canada's five major airports reveals strong relationships between structural centrality and operational characteristics, though with important nuances.
+
+\subsection*{3.1 Centrality vs. Flight Volume}
+
+Correlations between centrality metrics and operational flight volume demonstrate the relationship between network structure and traffic intensity, as measured by the Pearson correlation coefficient.
+
+\[
+r_{XY}
+=
+\frac{\displaystyle\sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})}
+     {\sqrt{\displaystyle\sum_{i=1}^{n} (x_i - \bar{x})^2}
+      \sqrt{\displaystyle\sum_{i=1}^{n} (y_i - \bar{y})^2}}
+\]
+
+\begin{table}[h!]
+    \centering
+    \caption{Pearson correlations between centrality and flight volume metrics}
+    \begin{tabular}{lcc}
+        \toprule
+        Metric 1 & Metric 2 & Pearson $r$ \\
+        \midrule
+        Degree Centrality & Total Flights      & 0.896 \\
+        Weighted Degree   & Total Flights      & 1.000 \\
+        Betweenness       & Total Flights      & $-0.895$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The correlation between degree centrality and total flights is very strong at $r = 0.896$, indicating that airports with more connections tend to handle substantially more flights. Most notably, the weighted degree (strength) metric shows a perfect correlation ($r = 1.000$) with total flights, which is expected as strength directly incorporates flight volume into the centrality calculation.
+
+Surprisingly, betweenness centrality shows a strong negative correlation ($r = -0.895$) with flight volume. This counterintuitive finding suggests that in Canada's airport network, the highest-traffic airports do not serve as critical bridges between other airports. Instead, the network exhibits a structure where major hubs connect directly to each other and to smaller airports, reducing the need for intermediary routing through any single airport.
+
+\subsection*{3.2 Hub Classification}
+
+Airports were classified into three categories based on quartile thresholds for both degree centrality and flight volume:
+
+\begin{table}[h!]
+    \centering
+    \caption{Summary of hub types in Canadian airport network}
+    \begin{tabular}{lcccc}
+        \toprule
+        Hub Type & Airports & Avg Degree & Avg Flights & Total System Flights \\
+        \midrule
+        Major Hub        & 2 & 116.0 & 2190.5 & 4381 \\
+        Connector Hub    & 1 & 114.0 & 2023.0 & 2023 \\
+        Regional Airport & 2 & 99.5  & 958.0  & 1916 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Two airports (Calgary and Toronto) qualify as Major Hubs with both high connectivity and high traffic. Vancouver serves as a Connector Hub with high degree centrality but relatively lower traffic intensity. Montreal and Edmonton function as Regional Airports. Collectively, the two Major Hubs handle 53.1\% of all flights in the network despite representing only 40\% of the airports analyzed, demonstrating the concentration of Canadian air traffic in these key hubs.
+
+\subsection*{3.3 Network Statistics}
+
+The Canadian airport network exhibits several distinctive structural properties:
+
+\begin{table}[h!]
+    \centering
+    \caption{Overall network characteristics}
+    \begin{tabular}{lc}
+        \toprule
+        Metric & Value \\
+        \midrule
+        Number of Airports       & 5 \\
+        Number of Routes         & 272 \\
+        Network Density          & 13.60 \\
+        Average Degree           & 108.80 \\
+        Average Path Length      & 3.05 \\
+        Clustering Coefficient   & 1.00 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The network demonstrates extremely high connectivity with 272 routes among only 5 airports, resulting in an average degree of 108.8 connections per airport. The clustering coefficient of 1.00 indicates perfect transitivity---if airport A connects to B, and B connects to C, then A also connects to C. This perfect clustering, combined with low betweenness values, confirms that Canada's major airports form a fully interconnected mesh rather than a traditional hub-and-spoke topology.
+
+The average path length of 3.05 suggests that flights between any two airports typically involve at most one or two connections, though the high direct connectivity implies most routes are actually direct flights rather than multi-leg journeys.
+
+\end{document}
