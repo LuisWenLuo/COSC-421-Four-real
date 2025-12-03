@@ -1,0 +1,95 @@
+\documentclass{article}
+\usepackage{graphicx}
+
+\title{COSC 421 Final Report}
+\author{Stephen Chen (29747219)}
+\date{December 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Analysis of Canadian Airport Connectivity}
+
+\subsection{Abstract}
+This study applies network analysis techniques to examine the structural properties of the Canadian domestic airport system. Using real-world flight data, we model airports as nodes and direct connections between them as edges to construct an undirected weighted network. Our analysis focuses on connectivity, centrality, and structural characteristics of the network, with particular attention to identifying hub airports and understanding whether the system follows a hub-and-spoke or distributed architecture. Results indicate that while airport connectivity in terms of distinct connections is relatively homogeneous, traffic volume and centrality measures reveal a clear dominance of major hubs, consistent with a hub-and-spoke structure. This work demonstrates the applicability of graph-theoretic methods to transportation systems and highlights the importance of modeling choices in network-based studies.
+
+\subsection{Introduction}
+Air transportation networks play a critical role in national and global mobility, economic activity, and infrastructure planning. Understanding how airports are interconnected can provide valuable insights into system efficiency, robustness, and vulnerability. In many countries, airline networks are designed according to a hub-and-spoke model, where a small number of highly connected airports serve as major transfer points for passengers and cargo.
+
+Canada’s unique geography, characterized by vast distances and uneven population distribution, presents an interesting case for studying airport connectivity. While major metropolitan centers are well connected, many regional or remote communities rely heavily on a limited number of airports to access the broader transportation network.
+
+The objective of this study is to quantitatively analyze the Canadian domestic airport network using network science methods. Specifically, we aim to:
+(1) characterize the overall connectivity of the airport network,
+(2) identify key airports that function as hubs or bridges, and
+(3) assess whether the network structure aligns more closely with a hub-and-spoke or distributed model.
+
+\subsection{Related Work}
+Transportation networks have been widely studied using tools from graph theory and complex network analysis. Early work by Barabási and Albert demonstrated that many real-world networks exhibit scale-free properties, characterized by heavy-tailed degree distributions and the presence of hubs. Subsequent studies have shown that airline networks often follow this pattern, with hub airports playing a disproportionate role in traffic flow and network connectivity.
+
+Guimerà et al. analyzed the worldwide air transportation network and identified structural communities and hub roles within the system. Similar methodologies have been applied to national airline systems in Europe, the United States, and Asia, revealing consistent hub-and-spoke structures shaped by economic and operational constraints.
+
+In the Canadian context, prior studies have primarily focused on airline competition, route economics, or passenger flows rather than network topology. This work contributes to the literature by providing a network-level perspective on Canadian airport connectivity using recent flight data.
+
+\subsection{Methodology}
+
+\subsubsection{Data Sources}
+The analysis uses multiple datasets containing information on Canadian airports and domestic flight operations. The primary datasets include:
+\begin{itemize}
+    \item A node dataset containing airport identifiers (ICAO codes) and associated metadata.
+    \item A daily edge dataset recording flights between pairs of airports, including the number of flights and flight duration statistics.
+\end{itemize}
+
+All datasets are publicly available and included in the project GitHub repository:
+\begin{center}
+\texttt{[https://github.com/LuisWenLuo/COSC-421-Four-real]}
+\end{center}
+
+\subsubsection{Data Preparation}
+To prepare the data for network analysis, airport ICAO codes were standardized and used as unique node identifiers. Self-loops, where an airport appeared as both origin and destination, were removed. Only edges connecting airports present in the node dataset were retained to ensure graph consistency.
+
+Daily flight records were aggregated so that each origin–destination pair appeared once in the final edge list. For each pair, the total number of flights over the observation period was computed and used as an edge weight, while flight duration statistics were averaged.
+
+\subsubsection{Network Construction}
+An undirected weighted graph was constructed using the \texttt{igraph} library in R. Airports were modeled as vertices, and connections between airports were modeled as edges weighted by total flight volume. The undirected representation was chosen to model overall connectivity rather than directional traffic flow.
+
+Disconnected components were expected due to regional and operational factors. Consequently, connectivity metrics were computed in a manner robust to disconnected graphs.
+
+\subsubsection{Network Metrics}
+The following metrics were computed:
+\begin{itemize}
+    \item Edge density to assess overall sparsity.
+    \item Average degree to characterize typical airport connectivity.
+    \item Average path length, computed allowing for disconnected components.
+    \item Connected components to identify network fragmentation.
+\end{itemize}
+
+Node-level importance was evaluated using degree centrality, betweenness centrality, eigenvector centrality, and weighted degree (strength).
+
+\subsection{Results}
+
+The constructed network exhibits low edge density, indicating a sparse connectivity structure. The presence of multiple connected components reflects the existence of isolated or weakly connected regional subnetworks.
+
+Degree-based analysis shows that most airports have a comparable number of distinct connections. However, weighted degree and centrality measures reveal substantial heterogeneity in traffic volume and network importance. A small number of airports dominate total flight traffic and occupy central positions in the network, acting as major hubs.
+
+Visualization of the giant connected component highlights a dense core of highly connected airports surrounded by less central nodes. These findings are consistent with a hub-and-spoke architecture.
+
+\subsection{Discussion}
+
+The analysis demonstrates that while unweighted connectivity suggests moderate homogeneity, weighted metrics expose strong hub dominance. This distinction underscores the importance of incorporating edge weights when analyzing transportation networks.
+
+Several challenges were encountered during the study. The primary challenge was handling disconnected components and aggregated temporal data, which required careful parameterization of network metrics to avoid misleading conclusions. These challenges were addressed through defensive data processing and appropriate use of igraph functions.
+
+A limitation of this study is the aggregation of flight data over time, which may obscure seasonal or temporal dynamics. Future work could incorporate temporal network analysis or airline-specific subnetworks if carrier-level data is available.
+
+If the study were repeated, an alternative modeling approach could include directed graphs and temporal segmentation to better capture directional flows and seasonal variability.
+
+\subsection{Conclusion}
+
+This study applied network analysis techniques to examine Canadian airport connectivity using real flight data. The results indicate a sparse but structured network dominated by a small number of hub airports. Centrality analysis and visualization confirm a hub-and-spoke architecture driven by traffic volume rather than merely the number of connections. Overall, the findings demonstrate the value of network-based approaches for understanding transportation systems and provide a foundation for further, more granular analysis.
+
+\subsection*{Statement of Contribution}
+All team members contributed to the project. Contributions included data preprocessing, network analysis, result interpretation, visualization, and report writing.
+
+
+\end{document}
