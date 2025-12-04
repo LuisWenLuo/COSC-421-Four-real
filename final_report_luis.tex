@@ -1,0 +1,154 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{hyperref}
+
+\title{COSC 421 Final Report\\Canadian Air Transportation Network Analysis}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{1. Introduction}
+
+This report analyzes the structure and robustness of the Canadian air transportation network using network science techniques. Using a dataset of Canadian airports and flight movements, a directed, weighted network was constructed and evaluated using classical centrality metrics and robustness simulations. The goal of this analysis is to determine:
+
+\begin{enumerate}[label=\arabic*.]
+    \item Which airports are structurally most central in the national network.
+    \item How the removal or disruption of highly central hubs impacts connectivity and efficiency.
+    \item How structural properties relate to the potential propagation of delays.
+\end{enumerate}
+
+The analysis provides insight into redundancy, vulnerability, and operational risks within Canada’s air transportation system.
+
+\section*{2. Network Construction}
+
+Nodes represent airports and directed edges represent flights from origin to destination. Flights were aggregated into weighted routes to capture the intensity of traffic between airports. The following data sources were used:
+
+\begin{itemize}
+    \item \textbf{nodes.csv}: ICAO codes and airport attributes.
+    \item \textbf{flights.csv}: individual flight records.
+\end{itemize}
+
+Edges were produced by grouping flights by origin and destination and counting occurrences. The resulting network is a weighted directed graph.
+
+\subsection*{R Code for Network Construction}
+
+\begin{verbatim}
+edges <- flights %>%
+  group_by(dep_icao, arr_icao) %>%
+  summarise(weight = n(), .groups = "drop") %>%
+  rename(source = dep_icao, target = arr_icao)
+
+g <- graph_from_data_frame(d = edges, vertices = nodes, directed = TRUE)
+E(g)$weight <- edges$weight
+\end{verbatim}
+
+This graph forms the basis for the subsequent analysis.
+
+\section*{3. Centrality Metrics}
+
+To assess structural importance, several centrality metrics were computed for every airport:
+
+\begin{enumerate}[label=\arabic*.]
+    \item In-degree and out-degree
+    \item Betweenness centrality
+    \item Eigenvector centrality
+\end{enumerate}
+
+These metrics reveal which airports act as critical hubs, transfer points, or peripheral nodes.
+
+\subsection*{3.1 Centrality Results}
+
+\begin{table}[h!]
+    \centering
+    \caption{Centrality metrics for major Canadian airports}
+    \begin{tabular}{lccc}
+        \toprule
+        Airport & In-degree & Betweenness & Eigenvector \\
+        \midrule
+        CYYZ (Toronto)   & High & Highest & High \\
+        CYYC (Calgary)   & High & Moderate & High \\
+        CYVR (Vancouver) & Moderate & Low & High \\
+        CYUL (Montreal)  & Low–Moderate & Low & Moderate \\
+        CYEG (Edmonton)  & Low & Low & Moderate \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Toronto (CYYZ) emerges as the most structurally central airport, with the highest betweenness and strong eigenvector score. Calgary (CYYC) and Vancouver (CYVR) also rank highly, while Edmonton (CYEG) is comparatively peripheral.
+
+\section*{4. Robustness Simulation}
+
+To assess vulnerability, airports were removed sequentially in order of descending betweenness centrality. After each removal, two global metrics were recalculated:
+
+\begin{enumerate}[label=\arabic*.]
+    \item \textbf{Network efficiency}: average shortest-path length.
+    \item \textbf{Connectivity}: size of the largest strongly connected component.
+\end{enumerate}
+
+\subsection*{R Code for Removal Simulation}
+
+\begin{verbatim}
+removal_order <- nodes %>%
+  arrange(desc(betweenness)) %>%
+  pull(icao)
+
+for (airport in removal_order) {
+  g_temp <- delete_vertices(g_temp, airport)
+  eff <- mean_distance(g_temp, directed = TRUE)
+  comp <- max(components(g_temp, mode = "strong")$csize)
+}
+\end{verbatim}
+
+\subsection*{4.1 Findings}
+
+Removing CYYZ produces a measurable increase in average path length and reduces network cohesion. Subsequent removal of CYYC and CYVR further decreases efficiency and fragments the network. This demonstrates that the national network is robust to random failures but vulnerable to targeted attacks on key hubs.
+
+\section*{5. Delay Propagation Insights}
+
+Although structural centrality identifies which airports are critical to network connectivity, delay propagation does not always align with centrality.
+
+The simulation and delay metrics suggest:
+
+\begin{itemize}
+    \item Toronto (CYYZ), though structurally most central, does \emph{not} propagate delays at the highest rate.
+    \item Vancouver (CYVR) shows the greatest potential for propagating severe delays due to its outbound connectivity patterns.
+    \item Delay risk depends on both network topology and operational timing.
+\end{itemize}
+
+This distinction highlights that structural analysis alone cannot fully predict operational reliability.
+
+\section*{6. Discussion}
+
+The combined centrality and robustness results reveal key structural properties:
+
+\begin{enumerate}
+    \item \textbf{CYYZ, CYYC, and CYVR} form the core of the Canadian air network. Removal of any of these significantly reduces efficiency.
+    \item \textbf{Peripheral airports}, such as CYEG, contribute little to long-range connectivity but help local redundancy.
+    \item \textbf{Delay sensitivity} is influenced by both structural centrality and temporal scheduling characteristics.
+\end{enumerate}
+
+The robustness simulation demonstrates that the network is highly dependent on a small number of hubs, making them critical points of failure.
+
+\section*{7. Conclusion}
+
+Through centrality analysis and robustness simulations, this report shows that:
+
+\begin{itemize}
+    \item The Canadian air transportation network is efficient and strongly hub-based.
+    \item Toronto, Calgary, and Vancouver are critical nodes and their removal severely degrades network function.
+    \item Structural centrality correlates with delay volume but not necessarily with delay propagation rate.
+    \item Operational risk differs from purely structural importance, emphasizing the need for hybrid network–operational models.
+\end{itemize}
+
+These findings highlight the importance of redundancy planning and targeted resilience strategies focused on Canada’s major hub airports.
+
+\end{document}
