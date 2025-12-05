@@ -1,37 +1,30 @@
-\documentclass[10pt]{article}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage[margin=1in]{geometry}
-\usepackage{enumitem}
+\documentclass{svproc}
 \usepackage{graphicx}
+\usepackage{amsmath, amssymb}
 \usepackage{booktabs}
-\usepackage{caption}
 \usepackage{hyperref}
-
-\title{COSC 421 Final Report\\
-Comprehensive Analysis of the Canadian Air Transportation Network}
-\author{
-    Stephen Chen (29747219) \\
-    Christian Eziekwu (38425443) \\
-    Liam Storgaard (6458279) \\
-    Luis Wen (10665891)
-}
-\date{December 2025}
+\usepackage{enumitem}
 
 \begin{document}
+\mainmatter              % start of a contribution
+
+\title{Comprehensive Analysis of the Canadian Air Transportation Network\\COSC 421 Final Report}
+\titlerunning{Canadian Air Transportation Network}  % abbreviated title (optional)
+
+\author{Stephen Chen (29747219) \and Christian Eziekwu (38425443) \and Liam Storgaard (6458279) \and Luis Wen (10665891)}
+\authorrunning{Liam et al.} % abbreviated author list
+
+\institute{Department of Science, University of British Columbia Okanagan}
+
 \maketitle
 
 \begin{abstract}
-This merged report synthesizes four complementary analyses of the Canadian air transportation network, integrating results from structural connectivity, centrality metrics, delay propagation analysis, weighted and unweighted network modeling, and robustness simulations. Across all analyses, Toronto (YYZ), Calgary (YYC), and Vancouver (YVR) consistently emerge as dominant hubs, with Montreal (YUL) and Edmonton (YEG) forming secondary tiers. Results highlight: (1) strong hub-and-spoke structure in weighted traffic patterns; (2) strong correlation between centrality and flight volume; (3) more nuanced and sometimes weak relationships between centrality and delay propagation; and (4) high vulnerability of the network to targeted removal of major hubs. Together, these findings provide a unified structural and operational view of Canada’s domestic air network.
+This report synthesizes four analyses of the Canadian air transportation network, integrating structural connectivity, centrality metrics, delay propagation, weighted and unweighted network modeling, and robustness simulations. Toronto (YYZ), Calgary (YYC), and Vancouver (YVR) emerge as dominant hubs, with Montreal (YUL) and Edmonton (YEG) forming secondary tiers. Findings highlight: hub-and-spoke structure, correlation between centrality and traffic volume, nuanced relationships with delay propagation, and high vulnerability to targeted removal of major hubs. All code and datasets are available at \url{https://github.com/LuisWenLuo/COSC-421-Four-real}.
 \end{abstract}
 
 \section{Introduction}
+Canada's vast geography and uneven population distribution make air transportation essential for national connectivity. This report integrates four complementary analyses:
 
-Canada’s vast geography and uneven population distribution make air transportation essential for national connectivity. Understanding the Canadian airport system requires examining not only connectivity, but also centrality, robustness, and delay propagation.
-
-This report integrates four analyses that each address part of this problem:
 \begin{enumerate}[label=\arabic*.]
     \item Structural centrality and traffic volume.
     \item Structural centrality and delay propagation.
@@ -39,47 +32,24 @@ This report integrates four analyses that each address part of this problem:
     \item Undirected weighted analysis of connectivity and hub structure.
 \end{enumerate}
 
-Collectively, these provide a detailed network-science perspective on the functioning, vulnerability, and operational patterns of Canada’s major airports.
+Collectively, these analyses provide a detailed network-science perspective on the functioning, vulnerability, and operational patterns of Canada’s major airports.
 
-\section{Metrics and Data Sources}
-
-\subsection{Centrality Metrics}
-
-Across the analyses, the following structural metrics were computed:
-\begin{itemize}
-    \item Degree (in, out, total)
-    \item Strength (weighted degree: in, out, total, log-strength)
-    \item Betweenness centrality
-    \item Closeness centrality
-    \item Eigenvector centrality
-    \item PageRank
-\end{itemize}
-
-\subsection{Operational and Delay Metrics}
-
-To examine traffic and delays, the following were computed:
-\begin{itemize}
-    \item Total flights, incoming flights, outgoing flights
-    \item Number of unique destinations and origins
-    \item Severe predecessor delays, number of propagated delays
-    \item Propagation rate and amplification
-    \item Spearman coupling ($\rho_{\text{spearman}}$)
-\end{itemize}
-
+\section{Data and Metrics}
 \subsection{Datasets}
+Flight data covering September 1–15, 2025, and airport metadata were used. Liam collected the flight data.  
 
-All analyses rely on real domestic flight data and airport metadata. Data is available via:
-\begin{center}
-\texttt{https://github.com/LuisWenLuo/COSC-421-Four-real}
-\end{center}
+\subsection{Network Metrics}
+\begin{itemize}
+    \item Degree, in-degree, out-degree
+    \item Weighted degree (strength)
+    \item Betweenness, closeness, eigenvector centrality, PageRank
+    \item Flight volumes, severe delays, propagation rate
+\end{itemize}
 
 \section{Structural Centrality and Flight Volume}
-
-\subsection{Hub Hierarchy}
-
 \begin{table}[h!]
-\centering
 \caption{Centrality metrics for major Canadian airports}
+\centering
 \begin{tabular}{lccccc}
 \toprule
 Airport & Degree & In-Degree & Out-Degree & Betweenness & Total Flights \\
@@ -93,70 +63,13 @@ YEG & 92  & 53 & 39 & 10 & 789 \\
 \end{tabular}
 \end{table}
 
-\subsection{Flight Volume Patterns}
-
-\begin{table}[h!]
-\centering
-\caption{Operational flight volume by airport}
-\begin{tabular}{lcccc}
-\toprule
-Airport & Total Flights & Degree & Flights/Connection & Hub Type \\
-\midrule
-YYZ & 2342 & 114 & 20.5 & Major Hub \\
-YYC & 2039 & 117 & 17.4 & Major Hub \\
-YVR & 2023 & 114 & 17.7 & Connector Hub \\
-YUL & 1127 & 107 & 10.5 & Regional \\
-YEG & 789  & 92  & 8.6 & Regional \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Centrality–Volume Correlations}
-
-\begin{table}[h!]
-\centering
-\caption{Correlation between centrality and traffic}
-\begin{tabular}{lcc}
-\toprule
-Centrality Metric & Volume Metric & $r$ \\
-\midrule
-Degree & Total Flights & 0.896 \\
-Strength & Total Flights & 1.000 \\
-Betweenness & Total Flights & $-0.895$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Weighted strength perfectly correlates with flight volume. Betweenness correlates negatively due to high network redundancy.
-
 \section{Structural Centrality and Delay Propagation}
-
-\subsection{Centrality Ranking}
-
 \begin{table}[h!]
+\caption{Delay volumes and propagation metrics}
 \centering
-\caption{Centrality metrics for delay analysis}
 \begin{tabular}{lcccc}
 \toprule
-Airport & strength\_total & closeness & eigenvector & PageRank \\
-\midrule
-YYZ & 2342 & 255.64 & 1.00 & 0.26 \\
-YYC & 2039 & 251.40 & 0.95 & 0.24 \\
-YVR & 2023 & 235.79 & 0.95 & 0.24 \\
-YUL & 1127 & 171.05 & 0.59 & 0.14 \\
-YEG & 789  & 85.52  & 0.41 & 0.13 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Delay Volumes}
-
-\begin{table}[h!]
-\centering
-\caption{Delay volumes and propagation}
-\begin{tabular}{lcccc}
-\toprule
-Airport & severe\_prev & propagated & rate & propagated/strength \\
+Airport & Severe Prev. Delays & Propagated & Rate & Propagated/Strength \\
 \midrule
 YYZ & 124 & 26 & 0.210 & 0.0111 \\
 YYC & 114 & 28 & 0.246 & 0.0137 \\
@@ -167,102 +80,69 @@ YEG & 23  & 6  & 0.261 & 0.0076 \\
 \end{tabular}
 \end{table}
 
-\subsection{Propagation Rate Correlations}
-
-\begin{table}[h!]
-\centering
-\caption{Centrality vs propagation rate}
-\begin{tabular}{lc}
-\toprule
-Metric & $r$ \\
-\midrule
-strength\_total & 0.25 \\
-closeness & 0.08 \\
-pagerank & 0.38 \\
-eigenvector & 0.25 \\
-betweenness & -0.12 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Amplification Correlations}
-
-\begin{table}[h!]
-\centering
-\caption{Centrality vs amplification}
-\begin{tabular}{lc}
-\toprule
-Metric & $r$ \\
-\midrule
-closeness & 0.80 \\
-log\_strength & 0.70 \\
-strength\_out & 0.69 \\
-eigenvector & 0.68 \\
-pagerank & 0.52 \\
-betweenness & 0.37 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \section{Robustness Simulation}
-
-To assess structural vulnerability, we constructed a weighted, directed graph of the five major Canadian airports (YYZ, YYC, YVR, YUL, YEG). Airports were removed sequentially in descending betweenness centrality order, and global efficiency and the size of the largest strongly connected component were recomputed after each removal. This simulation evaluates how dependent the national network is on its largest hubs.
-
-\subsection{Robustness Results}
+A weighted, directed graph of the five major airports (YYZ, YYC, YVR, YUL, YEG) was constructed. Airports were removed in descending betweenness centrality order. Global efficiency and the size of the largest strongly connected component were recorded.
 
 \begin{table}[h!]
+\caption{Robustness simulation results}
 \centering
-\caption{Robustness simulation results after sequential airport removal}
 \begin{tabular}{lccc}
 \toprule
 Removed Airport & Remaining Nodes & Efficiency & Largest Component \\
 \midrule
-CYUL & 4 & 190.0000 & 4 \\
-CYEG & 3 & 378.8333 & 3 \\
-CYVR & 2 & 339.0000 & 2 \\
+CYUL & 4 & 190.0 & 4 \\
+CYEG & 3 & 378.8 & 3 \\
+CYVR & 2 & 339.0 & 2 \\
 CYYC & 1 & NA & 1 \\
 CYYZ & 0 & NA & 1 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Interpretation}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{network_robustness.png}
+\caption{Network robustness: connectivity after removing central airports.}
+\label{fig:robustness}
+\end{figure}
 
-A weighted, directed graph was constructed and airports were removed in descending betweenness order.
-
-Results show:
+Results indicate:
 \begin{itemize}
     \item Removing YYZ produces immediate increases in average path length.
     \item Removing YYC and YVR further fragments the network.
     \item The network is robust to random failures but vulnerable to targeted disruption.
 \end{itemize}
 
-This confirms that Canada’s air network depends heavily on its top hubs, and that the loss of YYZ, YYC, or YVR produces rapid declines in overall connectivity and efficiency.
-
-
 \section{Undirected Connectivity Structure}
-
-The undirected weighted model shows:
+The undirected weighted network shows:
 \begin{itemize}
-    \item low edge density and multiple disconnected components,
-    \item degree homogeneity but strong weighted heterogeneity,
-    \item clear hub-and-spoke architecture driven by traffic volume.
+    \item Low edge density and multiple disconnected components.
+    \item Degree homogeneity but strong weighted heterogeneity.
+    \item Clear hub-and-spoke architecture driven by traffic volume.
 \end{itemize}
 
-\section{Combined Conclusions}
-
-Across all analyses:
+\section{Conclusions}
 \begin{enumerate}
     \item YYZ, YYC, and YVR form the structural core of Canada’s air network.
     \item Centrality strongly correlates with flight volume and delay volume.
-    \item Delay \emph{propagation rates} do not correlate strongly with centrality.
-    \item Major hubs are critical failure points in robustness simulations.
+    \item Delay propagation rates do not strongly correlate with centrality.
+    \item Major hubs are critical points of failure in robustness simulations.
     \item Peripheral airports dampen delays more reliably than central hubs.
     \item Weighted analysis reveals hub dominance overlooked in unweighted topology.
 \end{enumerate}
 
-\section*{Statement of Contribution}
-All team members contributed to preprocessing, network analysis, interpretations, visualizations, analysis, and writing. Liam collected the flight data corresponding to the period September 1–15, 2025.
+\appendix
+\section{Additional Figures}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{removal.png}
+\caption{Plot of connectivity after removing central airports}
+\end{figure}
 
+\section*{Statement of Contribution}
+All team members contributed to preprocessing, network analysis, interpretations, visualizations, and report writing. Liam collected the flight data corresponding to September 1–15, 2025.
+
+\bibliographystyle{spmpsci}
+\bibliography{references}
 
 \end{document}
