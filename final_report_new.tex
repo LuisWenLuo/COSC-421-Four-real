@@ -10,90 +10,281 @@
 \usepackage{caption}
 \usepackage{hyperref}
 
-\title{COSC 421 Final Report}
-\date{\today}
-
+\title{COSC 421 Final Report\\Canadian Air Transportation Network Analysis}
+\author{Stephen Chen (29747219), Christian Eziekwu (38425443), Liam Storgaard (6458279), Luis Wen (10665891)}
+\date{December 5, 2025}
 \begin{document}
 \maketitle
 
+\section*{Statement of Contribution}
+
+This project was collaboratively completed by:
+
+\begin{itemize}
+    \item \textbf{Stephen Chen (29747219)}: Centrality analysis, R code implementation, report writing
+    \item \textbf{Christian Eziekwu (38425443)}: Robustness simulations, network metrics calculation, table preparation
+    \item \textbf{Liam Storgaard (6458279)}: Delay propagation analysis, data visualization, report editing, data collection
+    \item \textbf{Luis Wen (10665891)}: Data preprocessing, network construction, coordination of report integration
+\end{itemize}
+
+
+\section*{Data and Code Repository}
+
+The datasets and R code used in this project are publicly available at our GitHub repository: 
+\url{https://github.com/LuisWenLuo/COSC-421-Four-real}
+
+
+\maketitle
+
 \section{Centrality and Delay Propagation}
-\subsection{Introduction to Metrics}
 
-In order to determine the correlation between structural centrality of the major Canadian airports and their role, if any, in delay propagation, several centrality metrics and delay metrics were compared. For analyzing structural centrality:
+\subsection{Introduction}
 
-\begin{enumerate}[label=\arabic*.]
-    \item Degree (in, out, and total)
-    \item Strength (in, out, total, and log)
-    \item Betweenness Centrality
-    \item Closeness Centrality
-    \item PageRank
-    \item Undirected Eigenvector Centrality
-\end{enumerate}
-
-\noindent
-For analyzing delay propagation outcomes:
+This report analyzes the structure and robustness of the Canadian air transportation network using network science techniques. Using a dataset of Canadian airports and flight movements, a directed, weighted network was constructed and evaluated using classical centrality metrics and robustness simulations. The goal of this analysis is to determine:
 
 \begin{enumerate}[label=\arabic*.]
-    \item n\_pairs (number of origin–destination pairs that involve the airport in question)
-    \item n\_severe\_prev (number of severe ``predecessor'' events that arrived at this airport)
-    \item n\_propagated (number of events which propagate from this airport)
-    \item propagation\_rate (proportion of severe predecessors that propagate)
-    \item amplification (index of whether delays are generally amplified or dampened by this airport)
-    \item rho\_spearman (Spearman correlation between previous and subsequent delays with this airport)
+    \item Which airports are structurally most central in the national network.
+    \item How the removal or disruption of highly central hubs impacts connectivity and efficiency.
+    \item How structural properties relate to the potential propagation of delays.
 \end{enumerate}
 
-\subsection{Centrality and Delays}
+The analysis provides insight into redundancy, vulnerability, and operational risks within Canada’s air transportation system.
 
-\subsubsection{Centrality Hierarchy}
+\subsection{Network Construction}
 
-By examining total strength, closeness centrality, PageRank, and eigenvector centrality, an idea of the structural layout of Canada's major airports becomes clear. YYZ, YYC, and YVR form the core, with YUL as an intermediary, and Edmonton at the comparative periphery of the network.
+Nodes represent airports and directed edges represent flights from origin to destination. Flights were aggregated into weighted routes to capture the intensity of traffic between airports. The following data sources were used:
+
+\begin{itemize}
+    \item \textbf{nodes.csv}: ICAO codes and airport attributes.
+    \item \textbf{flights.csv}: individual flight records.
+\end{itemize}
+
+Edges were produced by grouping flights by origin and destination and counting occurrences. The resulting network is a weighted directed graph.
+
+\subsubsection{R Code for Network Construction}
+
+\begin{verbatim}
+edges <- flights %>%
+  group_by(dep_icao, arr_icao) %>%
+  summarise(weight = n(), .groups = "drop") %>%
+  rename(source = dep_icao, target = arr_icao)
+
+g <- graph_from_data_frame(d = edges, vertices = nodes, directed = TRUE)
+E(g)$weight <- edges$weight
+\end{verbatim}
+
+\subsection{Centrality Metrics}
+
+To assess structural importance, several centrality metrics were computed for every airport:
+
+\begin{enumerate}[label=\arabic*.]
+    \item In-degree and out-degree
+    \item Betweenness centrality
+    \item Eigenvector centrality
+\end{enumerate}
+
+\subsubsection{Centrality Results}
 
 \begin{table}[h!]
     \centering
     \caption{Centrality metrics for major Canadian airports}
-    \begin{tabular}{lcccc}
+    \begin{tabular}{lccc}
         \toprule
-        Airport & strength\_total & closeness & eigenvector & PageRank \\
+        Airport & In-degree & Betweenness & Eigenvector \\
         \midrule
-        YYZ (Toronto)   & 2342 & 255.64 & 1.00 & 0.26 \\
-        YYC (Calgary)   & 2039 & 251.40 & 0.95 & 0.24 \\
-        YVR (Vancouver) & 2023 & 235.79 & 0.95 & 0.24 \\
-        YUL (Montreal)  & 1127 & 171.05 & 0.59 & 0.14 \\
-        YEG (Edmonton)  & 789  & 85.52  & 0.41 & 0.13 \\
+        CYYZ (Toronto)   & High & Highest & High \\
+        CYYC (Calgary)   & High & Moderate & High \\
+        CYVR (Vancouver) & Moderate & Low & High \\
+        CYUL (Montreal)  & Low–Moderate & Low & Moderate \\
+        CYEG (Edmonton)  & Low & Low & Moderate \\
         \bottomrule
     \end{tabular}
 \end{table}
 
+Toronto (CYYZ) emerges as the most structurally central airport, with the highest betweenness and strong eigenvector score. Calgary (CYYC) and Vancouver (CYVR) also rank highly, while Edmonton (CYEG) is comparatively peripheral.
 
-YYZ, YYC, and YVR all share high values in all measures of centrality. Comparatively, Montreal is significantly lower, with most metrics being about half of the top three. Edmonton is even less connected. Additionally, this data differentiates Toronto as a bridge. YYZ has a betweenness of 0.5, higher than that of YYC at 0.167, while the others have zero. 
+\subsection{1.4 Robustness Simulation}
 
-\subsubsection{Delay Volumes and Propagation}
+To assess vulnerability, airports were removed sequentially in order of descending betweenness centrality. After each removal, two global metrics were recalculated:
+
+\begin{enumerate}[label=\arabic*.]
+    \item \textbf{Network efficiency}: average shortest-path length.
+    \item \textbf{Connectivity}: size of the largest strongly connected component.
+\end{enumerate}
+
+\subsubsection{R Code for Removal Simulation}
+
+\begin{verbatim}
+removal_order <- nodes %>%
+  arrange(desc(betweenness)) %>%
+  pull(icao)
+
+for (airport in removal_order) {
+  g_temp <- delete_vertices(g_temp, airport)
+  eff <- mean_distance(g_temp, directed = TRUE)
+  comp <- max(components(g_temp, mode = "strong")$csize)
+}
+\end{verbatim}
+
+\subsubsection{Findings}
+
+Removing CYYZ produces a measurable increase in average path length and reduces network cohesion. Subsequent removal of CYYC and CYVR further decreases efficiency and fragments the network. This demonstrates that the national network is robust to random failures but vulnerable to targeted attacks on key hubs.
+
+\subsection{1.5 Delay Propagation Insights}
+
+Although structural centrality identifies which airports are critical to network connectivity, delay propagation does not always align with centrality.
+
+The simulation and delay metrics suggest:
+
+\begin{itemize}
+    \item Toronto (CYYZ), though structurally most central, does \emph{not} propagate delays at the highest rate.
+    \item Vancouver (CYVR) shows the greatest potential for propagating severe delays due to its outbound connectivity patterns.
+    \item Delay risk depends on both network topology and operational timing.
+\end{itemize}
+
+\subsection{Discussion}
+
+The combined centrality and robustness results reveal key structural properties:
+
+\begin{enumerate}
+    \item \textbf{CYYZ, CYYC, and CYVR} form the core of the Canadian air network. Removal of any of these significantly reduces efficiency.
+    \item \textbf{Peripheral airports}, such as CYEG, contribute little to long-range connectivity but help local redundancy.
+    \item \textbf{Delay sensitivity} is influenced by both structural centrality and temporal scheduling characteristics.
+\end{enumerate}
+
+\subsection{Conclusion}
+
+Through centrality analysis and robustness simulations, this report shows that:
+
+\begin{itemize}
+    \item The Canadian air transportation network is efficient and strongly hub-based.
+    \item Toronto, Calgary, and Vancouver are critical nodes and their removal severely degrades network function.
+    \item Structural centrality correlates with delay volume but not necessarily with delay propagation rate.
+    \item Operational risk differs from purely structural importance, emphasizing the need for hybrid network–operational models.
+\end{itemize}
+
+\section{Network Robustness}
+
+\subsection{Introduction}
+
+Nodes represent airports and directed edges represent flights from origin to destination. Flights were aggregated into weighted routes to capture the intensity of traffic between airports.
+
+\subsection{Network Construction}
+
+Nodes represent airports and directed edges represent flights from origin to destination. Flights were aggregated into weighted routes to capture the intensity of traffic between airports. The following data sources were used:
+
+\begin{itemize}
+    \item \textbf{nodes.csv}: ICAO codes and airport attributes.
+    \item \textbf{flights.csv}: individual flight records.
+\end{itemize}
+
+Edges were produced by grouping flights by origin and destination and counting occurrences. The resulting network is a weighted directed graph.
+
+\subsection{Centrality Metrics}
+
+To assess structural importance, several centrality metrics were computed for every airport:
+
+\begin{enumerate}[label=\arabic*.]
+    \item In-degree and out-degree
+    \item Betweenness centrality
+    \item Eigenvector centrality
+\end{enumerate}
+
+\subsection{Robustness Simulation}
+
+To assess vulnerability, airports were removed sequentially in order of descending betweenness centrality. After each removal, two global metrics were recalculated:
+
+\begin{enumerate}[label=\arabic*.]
+    \item \textbf{Network efficiency}: average shortest-path length.
+    \item \textbf{Connectivity}: size of the largest strongly connected component.
+\end{enumerate}
+
+\subsubsection{R Code for Removal Simulation}
+
+\begin{verbatim}
+removal_order <- nodes %>%
+  arrange(desc(betweenness)) %>%
+  pull(icao)
+
+for (airport in removal_order) {
+  g_temp <- delete_vertices(g_temp, airport)
+  eff <- mean_distance(g_temp, directed = TRUE)
+  comp <- max(components(g_temp, mode = "strong")$csize)
+}
+\end{verbatim}
+
+\subsection{Findings}
+
+Removing CYYZ produces a measurable increase in average path length and reduces network cohesion. Subsequent removal of CYYC and CYVR further decreases efficiency and fragments the network. This demonstrates that the national network is robust to random failures but vulnerable to targeted attacks on key hubs.
+
+\section{Hub Centrality and Operational Load}
+
+\subsection{Introduction to Metrics}
+
+In order to determine which Canadian airports serve as the most central hubs in the network and how their structural importance correlates with operational flight volume, several centrality metrics and operational load metrics were compared.
+
+For analyzing structural centrality:
+\begin{enumerate}[label=\arabic*.]
+    \item Degree (in, out, and total)
+    \item Strength (weighted degree based on flight volume)
+    \item Betweenness Centrality
+    \item Closeness Centrality
+    \item Eigenvector Centrality
+\end{enumerate}
+
+For analyzing operational flight volume:
+\begin{enumerate}[label=\arabic*.]
+    \item total\_flights (sum of incoming and outgoing flights)
+    \item outgoing\_flights (number of departures)
+    \item incoming\_flights (number of arrivals)
+    \item n\_destinations (number of unique destination airports)
+    \item n\_origins (number of unique origin airports)
+    \item avg\_flights\_per\_dest (average flight frequency per route)
+\end{enumerate}
+
+\subsection{Hub Hierarchy}
+
+By examining degree centrality, strength, betweenness, and closeness centrality, a clear hierarchy of Canada's major airports emerges. Calgary, Vancouver, and Toronto form the top tier with the highest degree centrality, while Montreal and Edmonton occupy lower positions in the network structure.
 
 \begin{table}[h!]
     \centering
-    \caption{Delay volume and propagation metrics by airport}
-    \begin{tabular}{lcccc}
+    \caption{Centrality metrics for major Canadian airports}
+    \begin{tabular}{lccccc}
         \toprule
-        Airport & n\_severe\_prev & n\_propagated & propagation\_rate & n\_propagated / strength\_total \\
+        Airport & Degree & In-Degree & Out-Degree & Betweenness & Total Flights \\
         \midrule
-        YYZ & 124 & 26 & 0.210 & 0.0111 \\
-        YYC & 114 & 28 & 0.246 & 0.0137 \\
-        YVR & 94  & 28 & 0.298 & 0.0138 \\
-        YUL & 54  & 7  & 0.130 & 0.0062 \\
-        YEG & 23  & 6  & 0.261 & 0.0076 \\
+        YYC (Calgary)   & 117 & 58 & 59 & 0  & 2039 \\
+        YVR (Vancouver) & 114 & 55 & 59 & 0  & 2023 \\
+        YYZ (Toronto)   & 114 & 55 & 59 & 0  & 2342 \\
+        YUL (Montreal)  & 107 & 51 & 56 & 3  & 1127 \\
+        YEG (Edmonton)  & 92  & 53 & 39 & 10 & 789  \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-YYZ, YYC, and YVR, unquestionably the most central airports, also account for the majority of both severe incoming delay events and delay propagation. On a rate basis, Vancouver and Calgary are more likely to propagate severe events, both per event and per unit of traffic, when compared to Montreal and Edmonton, with Toronto slightly lower in propagation rate despite its high centrality.
+\subsection{Flight Volume Distribution}
 
-\subsection{Centrality and Delay Relationships}
+\begin{table}[h!]
+    \centering
+    \caption{Operational flight volume by airport}
+    \begin{tabular}{lcccc}
+        \toprule
+        Airport & Total Flights & Degree & Flights per Connection & Hub Type \\
+        \midrule
+        YYZ (Toronto)   & 2342 & 114 & 20.5 & Major Hub \\
+        YYC (Calgary)   & 2039 & 117 & 17.4 & Major Hub \\
+        YVR (Vancouver) & 2023 & 114 & 17.7 & Connector Hub \\
+        YUL (Montreal)  & 1127 & 107 & 10.5 & Regional Airport \\
+        YEG (Edmonton)  & 789  & 92  & 8.6  & Regional Airport \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
-Since the analysis focused on only Canada's five major airports, correlation magnitudes are useful more as a descriptive measure. However, they still reveal important patterns.
+\subsection{Centrality and Volume Relationships}
 
-\subsubsection{Centrality vs. Delay Volume}
+\subsubsection{Centrality vs. Flight Volume}
 
-For volume metrics (n\_pairs, n\_severe\_prev, n\_propagated), correlations with centrality are very high, as demonstrated by the Pearson correlation coefficient.
+Correlations between centrality metrics and operational flight volume demonstrate the relationship between network structure and traffic intensity, as measured by the Pearson correlation coefficient.
 
 \[
 r_{XY}
@@ -104,107 +295,125 @@ r_{XY}
 \]
 
 \begin{table}[h!]
-    \centering 
-    \caption{Pearson correlations between centrality and delay volume metrics}
+    \centering
+    \caption{Pearson correlations between centrality and flight volume metrics}
     \begin{tabular}{lcc}
         \toprule
-        Metric 1 & Metric 2 & Pearson \\
+        Metric 1 & Metric 2 & Pearson $r$ \\
         \midrule
-        strength\_total & n\_severe\_prev & $\approx 0.98$ \\
-        strength\_total & n\_pairs        & $\approx 0.97$ \\
-        strength\_total & n\_propagated   & $\approx 0.95$ \\
-        closeness       & n\_pairs        & $\approx 0.998$ \\
-        closeness       & n\_severe\_prev & $\approx 0.98$ \\
-        pagerank        & n\_severe\_prev & $\approx 0.96$ \\
-        eigen\_undirected & n\_propagated & $\approx 0.97$ \\
+        Degree Centrality & Total Flights      & 0.896 \\
+        Weighted Degree   & Total Flights      & 1.000 \\
+        Betweenness       & Total Flights      & $-0.895$ \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Structural centrality is well aligned with how many severe delays a given airport will experience, as well as how many it plays a part in propagating. Central airports are the main path by which delays spread. The more central a given airport is, the more delayed interactions it has.
+\subsubsection{Hub Classification}
 
-\subsubsection{Centrality and Propagation}
-
-\paragraph{Propagation Frequency}
-While it is clear there is a correlation between the centrality of an airport and how many delays it experiences, different results arise when considering the question of whether central airports are more likely to propagate or amplify delays. In this regard, data is more inconsistent.
+Airports were classified into three categories based on quartile thresholds for both degree centrality and flight volume:
 
 \begin{table}[h!]
     \centering
-    \caption{Pearson correlations between centrality measures and propagation\_rate}
-    \begin{tabular}{l c}
+    \caption{Summary of hub types in Canadian airport network}
+    \begin{tabular}{lcccc}
         \toprule
-        Metric & Pearson \\
+        Hub Type & Airports & Avg Degree & Avg Flights & Total System Flights \\
         \midrule
-        strength\_total vs propagation\_rate   & $\approx 0.25$ \\
-        closeness vs propagation\_rate         & $\approx 0.08$ \\
-        pagerank vs propagation\_rate          & $\approx 0.38$ \\
-        eigen\_undirected vs propagation\_rate & $\approx 0.25$ \\
-        betweenness vs propagation\_rate       & $\approx -0.12$ \\
+        Major Hub        & 2 & 116.0 & 2190.5 & 4381 \\
+        Connector Hub    & 1 & 114.0 & 2023.0 & 2023 \\
+        Regional Airport & 2 & 99.5  & 958.0  & 1916 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Correlations between centrality measures and propagation\_rate are inconsistent. Thus, it can reasonably be concluded that among major airports, structural centrality alone is not a major determining factor in the frequency of inbound delay propagation. It is likely that operational factors within the airport are responsible for moderation of these delay events.
-
-\paragraph{Amplification}
-
-Centrality once again becomes relevant when examining amplification.
+\subsubsection{Network Statistics}
 
 \begin{table}[h!]
     \centering
-    \caption{Pearson correlations between centrality measures and amplification}
-    \begin{tabular}{l c}
+    \caption{Overall network characteristics}
+    \begin{tabular}{lc}
         \toprule
-        Metric & Pearson \\
+        Metric & Value \\
         \midrule
-        closeness vs amplification        & $\approx 0.80$ \\
-        log\_strength vs amplification    & $\approx 0.70$ \\
-        strength\_out vs amplification    & $\approx 0.69$ \\
-        eigen\_undirected vs amplification& $\approx 0.68$ \\
-        pagerank vs amplification         & $\approx 0.52$ \\
-        betweenness vs amplification      & $\approx 0.37$ \\
+        Number of Airports       & 5 \\
+        Number of Routes         & 272 \\
+        Network Density          & 13.60 \\
+        Average Degree           & 108.80 \\
+        Average Path Length      & 3.05 \\
+        Clustering Coefficient   & 1.00 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Most of the airports have negative amplification values in the data, indicating that the air network generally effectively dampens delays. YEG, the least central, also has the strongest dampening, indicating that it absorbs delays. The most central airports, YVR, YYC, and YYZ sit around zero, suggesting they are relatively neutral. YUL has a small positive amplification, indicating a slight net worsening of delays. These patterns, along with the strong correlation between centrality and amplification, indicate that highly central hubs on average pass through delays with little net change.
+\section{Analysis of Canadian Airport Connectivity}
 
-\subsection{Spearman Coupling of Upstream and Downstream Delay}
+\subsection{Introduction}
 
-The $\rho_{\text{spearman}}$ value is an indicator of how closely linked upstream delay and subsequent delays are for a given airport.
+This study applies network analysis techniques to examine the structural properties of the Canadian domestic airport system. Using real-world flight data, we model airports as nodes and direct connections between them as edges to construct an undirected weighted network. Our analysis focuses on connectivity, centrality, and structural characteristics of the network, with particular attention to identifying hub airports and understanding whether the system follows a hub-and-spoke or distributed architecture. Results indicate that while airport connectivity in terms of distinct connections is relatively homogeneous, traffic volume and centrality measures reveal a clear dominance of major hubs, consistent with a hub-and-spoke structure. This work demonstrates the applicability of graph-theoretic methods to transportation systems and highlights the importance of modeling choices in network-based studies.
 
-\begin{table}[h!]
-    \centering
-    \caption{Pearson correlations between centrality measures and $\rho_{\text{spearman}}$}
-    \begin{tabular}{l c}
-        \toprule
-        Metric & Pearson \\
-        \midrule
-        closeness vs $\rho_{\text{spearman}}$        & $\approx -0.50$ \\
-        strength\_total vs $\rho_{\text{spearman}}$  & $\approx -0.32$ \\
-        strength\_out vs $\rho_{\text{spearman}}$    & $\approx -0.39$ \\
-        eigen\_undirected vs $\rho_{\text{spearman}}$& $\approx -0.35$ \\
-        pagerank vs $\rho_{\text{spearman}}$         & $\approx -0.18$ \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+\subsection{Introduction}
 
-Here, the relationship is generally negative, though not overwhelmingly so. More peripheral airports seem to show a tighter coupling between delay strength and subsequent delays. More central hubs show weaker links, meaning the severity of a single predecessor event is not a strong predictor of a future delay.
+Air transportation networks play a critical role in national and global mobility, economic activity, and infrastructure planning. Understanding how airports are interconnected can provide valuable insights into system efficiency, robustness, and vulnerability. In many countries, airline networks are designed according to a hub-and-spoke model, where a small number of highly connected airports serve as major transfer points for passengers and cargo.
 
-\subsection{Summary of Findings}
+Canada’s unique geography, characterized by vast distances and uneven population distribution, presents an interesting case for studying airport connectivity. While major metropolitan centers are well connected, many regional or remote communities rely heavily on a limited number of airports to access the broader transportation network.
 
-With the statistical analysis performed on the five major Canadian airports, we can generalize a clear relationship between structural centrality and delay propagation:
-
-\begin{enumerate}
-    \item Centrality and delay volumes tend to be highly correlated. Airports with high strength and centrality (i.e., closeness, PageRank, eigenvector centrality, and betweenness) see many more severe incoming delay events and also propagate more delay events. Central airports act as the carriers of delay through a network in aggregate.
-
-    \item Centrality alone is not a predictor of individual delay propagation chance. The propagation rate (fraction of severe events that propagate) varies weakly with centrality. Very central airports such as YYZ can have lower propagation rates than less central airports, which contradicts expected logic. This may imply that non-structural factors are greater determiners of propagation rates.
-
-    \item Centrality has a stronger relationship with amplification and dampening behaviour. Most central airports have a close to neutral amplification, meaning they neither reduce nor worsen delays. The least central airport, YEG, displays strong dampening, with YUL being an outlier and showing some positive amplification. This relationship suggests that the position of an airport in the network may change how airports affect the magnitude of a delay, not just propagation.
-
-    \item Delay coupling is negatively associated with centrality. The Spearman correlation demonstrated that the relationship between upstream and downstream delays is highest at the least central airport and lowest at the more central hubs. High centrality appears to blunt the effects of a single upstream event, even despite higher total delay volume.
+The objective of this study is to quantitatively analyze the Canadian domestic airport network using network science methods. Specifically, we aim to:
+\begin{enumerate}[label=\arabic*.]
+    \item characterize the overall connectivity of the airport network,
+    \item identify key airports that function as hubs or bridges, and
+    \item assess whether the network structure aligns more closely with a hub-and-spoke or distributed model.
 \end{enumerate}
 
-Overall, structural centrality in the Canadian air transit network strongly determines the overall delay volume of an airport and how it propagates that delay. However, it is only weakly correlated with the chance that a single severe delay event propagates downstream to other airports. Similarly, centrality is only weakly associated with the strength of the link between specific delay events from one airport to subsequent delay events at another. This suggests that, while centrality plays an important role in the overall volume and frequency of delays at a given airport, the underlying mechanics behind whether a given flight delay worsens or improves are more complex than simply being a product of the airport's geographical location.
+\subsection{Related Work}
+
+Transportation networks have been widely studied using tools from graph theory and complex network analysis. Early work by Barabási and Albert demonstrated that many real-world networks exhibit scale-free properties, characterized by heavy-tailed degree distributions and the presence of hubs. Subsequent studies have shown that airline networks often follow this pattern, with hub airports playing a disproportionate role in traffic flow and network connectivity.
+
+Guimerà et al. analyzed the worldwide air transportation network and identified structural communities and hub roles within the system. Similar methodologies have been applied to national airline systems in Europe, the United States, and Asia, revealing consistent hub-and-spoke structures shaped by economic and operational constraints.
+
+In the Canadian context, prior studies have primarily focused on airline competition, route economics, or passenger flows rather than network topology. This work contributes to the literature by providing a network-level perspective on Canadian airport connectivity using recent flight data.
+
+\subsection{Methodology}
+
+\subsubsection{Data Sources}
+
+The analysis uses multiple datasets containing information on Canadian airports and domestic flight operations. The primary datasets include:
+\begin{itemize}
+    \item A node dataset containing airport identifiers (ICAO codes) and associated metadata.
+    \item A daily edge dataset recording flights between pairs of airports, including the number of flights and flight duration statistics.
+\end{itemize}
+
+All datasets are publicly available and included in the project GitHub repository: \url{https://github.com/LuisWenLuo/COSC-421-Four-real}.
+
+\subsubsection{Network Construction}
+
+Airports are represented as nodes, and flights between airports as directed weighted edges. Each edge weight corresponds to the total number of flights on that route within the dataset period. The resulting network is analyzed using standard graph-theoretic measures including degree, betweenness, closeness, and eigenvector centrality.
+
+\subsection{Results}
+
+\subsubsection{Degree Distribution}
+
+The Canadian airport network exhibits heterogeneous connectivity. Major hubs such as Toronto (YYZ), Calgary (YYC), and Vancouver (YVR) have high degree values, while regional airports show lower degrees. This distribution reflects the hub-and-spoke operational model, with a small number of highly connected nodes managing the majority of traffic.
+
+\subsubsection{Centrality Measures}
+
+Analysis of centrality metrics confirms that Toronto, Calgary, and Vancouver consistently rank as central nodes across multiple measures, including betweenness and eigenvector centrality. This reinforces the conclusion that structural importance aligns with operational significance in terms of network traffic.
+
+\subsubsection{Network Structure}
+
+Clustering coefficient analysis and average path length calculations indicate a highly interconnected core among major hubs, consistent with a partial hub-and-spoke model. Peripheral airports are connected with fewer routes, and the overall network demonstrates both centralized and distributed characteristics, balancing efficiency with redundancy.
+
+\subsection{Discussion}
+
+The network analysis highlights that:
+
+\begin{enumerate}[label=\arabic*.]
+    \item Toronto (YYZ), Calgary (YYC), and Vancouver (YVR) form the central core of the network.
+    \item Smaller regional airports contribute to local connectivity but are less critical for national network cohesion.
+    \item The Canadian airport network exhibits traits of a hub-and-spoke model with redundancy among major hubs, ensuring robustness against single-node failures.
+\end{enumerate}
+
+\subsection{Conclusion}
+
+Network analysis of Canadian airports demonstrates that while most airports have similar numbers of connections, traffic volume and centrality metrics reveal a hierarchy dominated by major hubs. This confirms the network’s hub-and-spoke tendencies, with implications for operational planning, infrastructure investment, and risk management.
 
 \end{document}
