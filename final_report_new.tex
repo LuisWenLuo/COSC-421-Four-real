@@ -36,8 +36,6 @@ The datasets and R code used in this project are publicly available at our GitHu
 
 \maketitle
 
-\section{Centrality and Delay Propagation}
-
 \subsection{Introduction}
 
 This report analyzes the structure and robustness of the Canadian air transportation network using network science techniques. Using a dataset of Canadian airports and flight movements, a directed, weighted network was constructed and evaluated using classical centrality metrics and robustness simulations. The goal of this analysis is to determine:
@@ -162,6 +160,200 @@ Through centrality analysis and robustness simulations, this report shows that:
     \item Structural centrality correlates with delay volume but not necessarily with delay propagation rate.
     \item Operational risk differs from purely structural importance, emphasizing the need for hybrid network–operational models.
 \end{itemize}
+
+\section{Centrality and Delay Propagation}
+\subsection{Introduction to Metrics}
+
+In order to determine the correlation between structural centrality of the major Canadian airports and their role, if any, in delay propagation, several centrality metrics and delay metrics were compared. For analyzing structural centrality:
+
+\begin{enumerate}[label=\arabic*.]
+    \item Degree (in, out, and total)
+    \item Strength (in, out, total, and log)
+    \item Betweenness Centrality
+    \item Closeness Centrality
+    \item PageRank
+    \item Undirected Eigenvector Centrality
+\end{enumerate}
+
+\noindent
+For analyzing delay propagation outcomes:
+
+\begin{enumerate}[label=\arabic*.]
+    \item n\_pairs (number of origin–destination pairs that involve the airport in question)
+    \item n\_severe\_prev (number of severe ``predecessor'' events that arrived at this airport)
+    \item n\_propagated (number of events which propagate from this airport)
+    \item propagation\_rate (proportion of severe predecessors that propagate)
+    \item amplification (index of whether delays are generally amplified or dampened by this airport)
+    \item rho\_spearman (Spearman correlation between previous and subsequent delays with this airport)
+\end{enumerate}
+
+\subsection{Centrality and Delays}
+
+\subsubsection{Centrality Hierarchy}
+
+By examining total strength, closeness centrality, PageRank, and eigenvector centrality, an idea of the structural layout of Canada's major airports becomes clear. YYZ, YYC, and YVR form the core, with YUL as an intermediary, and Edmonton at the comparative periphery of the network.
+
+\begin{table}[h!]
+    \centering
+    \caption{Centrality metrics for major Canadian airports}
+    \begin{tabular}{lcccc}
+        \toprule
+        Airport & strength\_total & closeness & eigenvector & PageRank \\
+        \midrule
+        YYZ (Toronto)   & 2342 & 255.64 & 1.00 & 0.26 \\
+        YYC (Calgary)   & 2039 & 251.40 & 0.95 & 0.24 \\
+        YVR (Vancouver) & 2023 & 235.79 & 0.95 & 0.24 \\
+        YUL (Montreal)  & 1127 & 171.05 & 0.59 & 0.14 \\
+        YEG (Edmonton)  & 789  & 85.52  & 0.41 & 0.13 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+YYZ, YYC, and YVR all share high values in all measures of centrality. Comparatively, Montreal is significantly lower, with most metrics being about half of the top three. Edmonton is even less connected. Additionally, this data differentiates Toronto as a bridge. YYZ has a betweenness of 0.5, higher than that of YYC at 0.167, while the others have zero. 
+
+\subsubsection{Delay Volumes and Propagation}
+
+\begin{table}[h!]
+    \centering
+    \caption{Delay volume and propagation metrics by airport}
+    \begin{tabular}{lcccc}
+        \toprule
+        Airport & n\_severe\_prev & n\_propagated & propagation\_rate & n\_propagated / strength\_total \\
+        \midrule
+        YYZ & 124 & 26 & 0.210 & 0.0111 \\
+        YYC & 114 & 28 & 0.246 & 0.0137 \\
+        YVR & 94  & 28 & 0.298 & 0.0138 \\
+        YUL & 54  & 7  & 0.130 & 0.0062 \\
+        YEG & 23  & 6  & 0.261 & 0.0076 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+YYZ, YYC, and YVR, unquestionably the most central airports, also account for the majority of both severe incoming delay events and delay propagation. On a rate basis, Vancouver and Calgary are more likely to propagate severe events, both per event and per unit of traffic, when compared to Montreal and Edmonton, with Toronto slightly lower in propagation rate despite its high centrality.
+
+\subsection{Centrality and Delay Relationships}
+
+Since the analysis focused on only Canada's five major airports, correlation magnitudes are useful more as a descriptive measure. However, they still reveal important patterns.
+
+\subsubsection{Centrality vs. Delay Volume}
+
+For volume metrics (n\_pairs, n\_severe\_prev, n\_propagated), correlations with centrality are very high, as demonstrated by the Pearson correlation coefficient.
+
+\[
+r_{XY}
+=
+\frac{\displaystyle\sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})}
+     {\sqrt{\displaystyle\sum_{i=1}^{n} (x_i - \bar{x})^2}
+      \sqrt{\displaystyle\sum_{i=1}^{n} (y_i - \bar{y})^2}}
+\]
+
+\begin{table}[h!]
+    \centering 
+    \caption{Pearson correlations between centrality and delay volume metrics}
+    \begin{tabular}{lcc}
+        \toprule
+        Metric 1 & Metric 2 & Pearson \\
+        \midrule
+        strength\_total & n\_severe\_prev & $\approx 0.98$ \\
+        strength\_total & n\_pairs        & $\approx 0.97$ \\
+        strength\_total & n\_propagated   & $\approx 0.95$ \\
+        closeness       & n\_pairs        & $\approx 0.998$ \\
+        closeness       & n\_severe\_prev & $\approx 0.98$ \\
+        pagerank        & n\_severe\_prev & $\approx 0.96$ \\
+        eigen\_undirected & n\_propagated & $\approx 0.97$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Structural centrality is well aligned with how many severe delays a given airport will experience, as well as how many it plays a part in propagating. Central airports are the main path by which delays spread. The more central a given airport is, the more delayed interactions it has.
+
+\subsubsection{Centrality and Propagation}
+
+\paragraph{Propagation Frequency}
+While it is clear there is a correlation between the centrality of an airport and how many delays it experiences, different results arise when considering the question of whether central airports are more likely to propagate or amplify delays. In this regard, data is more inconsistent.
+
+\begin{table}[h!]
+    \centering
+    \caption{Pearson correlations between centrality measures and propagation\_rate}
+    \begin{tabular}{l c}
+        \toprule
+        Metric & Pearson \\
+        \midrule
+        strength\_total vs propagation\_rate   & $\approx 0.25$ \\
+        closeness vs propagation\_rate         & $\approx 0.08$ \\
+        pagerank vs propagation\_rate          & $\approx 0.38$ \\
+        eigen\_undirected vs propagation\_rate & $\approx 0.25$ \\
+        betweenness vs propagation\_rate       & $\approx -0.12$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Correlations between centrality measures and propagation\_rate are inconsistent. Thus, it can reasonably be concluded that among major airports, structural centrality alone is not a major determining factor in the frequency of inbound delay propagation. It is likely that operational factors within the airport are responsible for moderation of these delay events.
+
+\paragraph{Amplification}
+
+Centrality once again becomes relevant when examining amplification.
+
+\begin{table}[h!]
+    \centering
+    \caption{Pearson correlations between centrality measures and amplification}
+    \begin{tabular}{l c}
+        \toprule
+        Metric & Pearson \\
+        \midrule
+        closeness vs amplification        & $\approx 0.80$ \\
+        log\_strength vs amplification    & $\approx 0.70$ \\
+        strength\_out vs amplification    & $\approx 0.69$ \\
+        eigen\_undirected vs amplification& $\approx 0.68$ \\
+        pagerank vs amplification         & $\approx 0.52$ \\
+        betweenness vs amplification      & $\approx 0.37$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Most of the airports have negative amplification values in the data, indicating that the air network generally effectively dampens delays. YEG, the least central, also has the strongest dampening, indicating that it absorbs delays. The most central airports, YVR, YYC, and YYZ sit around zero, suggesting they are relatively neutral. YUL has a small positive amplification, indicating a slight net worsening of delays. These patterns, along with the strong correlation between centrality and amplification, indicate that highly central hubs on average pass through delays with little net change.
+
+\subsection{Spearman Coupling of Upstream and Downstream Delay}
+
+The $\rho_{\text{spearman}}$ value is an indicator of how closely linked upstream delay and subsequent delays are for a given airport.
+
+\begin{table}[h!]
+    \centering
+    \caption{Pearson correlations between centrality measures and $\rho_{\text{spearman}}$}
+    \begin{tabular}{l c}
+        \toprule
+        Metric & Pearson \\
+        \midrule
+        closeness vs $\rho_{\text{spearman}}$        & $\approx -0.50$ \\
+        strength\_total vs $\rho_{\text{spearman}}$  & $\approx -0.32$ \\
+        strength\_out vs $\rho_{\text{spearman}}$    & $\approx -0.39$ \\
+        eigen\_undirected vs $\rho_{\text{spearman}}$& $\approx -0.35$ \\
+        pagerank vs $\rho_{\text{spearman}}$         & $\approx -0.18$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Here, the relationship is generally negative, though not overwhelmingly so. More peripheral airports seem to show a tighter coupling between delay strength and subsequent delays. More central hubs show weaker links, meaning the severity of a single predecessor event is not a strong predictor of a future delay.
+
+\subsection{Summary of Findings}
+
+With the statistical analysis performed on the five major Canadian airports, we can generalize a clear relationship between structural centrality and delay propagation:
+
+\begin{enumerate}
+    \item Centrality and delay volumes tend to be highly correlated. Airports with high strength and centrality (i.e., closeness, PageRank, eigenvector centrality, and betweenness) see many more severe incoming delay events and also propagate more delay events. Central airports act as the carriers of delay through a network in aggregate.
+
+    \item Centrality alone is not a predictor of individual delay propagation chance. The propagation rate (fraction of severe events that propagate) varies weakly with centrality. Very central airports such as YYZ can have lower propagation rates than less central airports, which contradicts expected logic. This may imply that non-structural factors are greater determiners of propagation rates.
+
+    \item Centrality has a stronger relationship with amplification and dampening behaviour. Most central airports have a close to neutral amplification, meaning they neither reduce nor worsen delays. The least central airport, YEG, displays strong dampening, with YUL being an outlier and showing some positive amplification. This relationship suggests that the position of an airport in the network may change how airports affect the magnitude of a delay, not just propagation.
+
+    \item Delay coupling is negatively associated with centrality. The Spearman correlation demonstrated that the relationship between upstream and downstream delays is highest at the least central airport and lowest at the more central hubs. High centrality appears to blunt the effects of a single upstream event, even despite higher total delay volume.
+\end{enumerate}
+
+Overall, structural centrality in the Canadian air transit network strongly determines the overall delay volume of an airport and how it propagates that delay. However, it is only weakly correlated with the chance that a single severe delay event propagates downstream to other airports. Similarly, centrality is only weakly associated with the strength of the link between specific delay events from one airport to subsequent delay events at another. This suggests that, while centrality plays an important role in the overall volume and frequency of delays at a given airport, the underlying mechanics behind whether a given flight delay worsens or improves are more complex than simply being a product of the airport's geographical location.
+
+
+
 
 \section{Network Robustness}
 
